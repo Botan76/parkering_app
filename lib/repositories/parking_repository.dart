@@ -1,23 +1,59 @@
-import '../models/parking.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class ParkingRepository {
-  List<Parking> parkings = [];
+  final String baseUrl = "http://localhost:8080/parkings"; // Server API
 
-  void add(Parking parking) {
-    parkings.add(parking);
-    print("Parking added successfully.");
+  // Add a new parking entry (POST request)
+  Future<void> addParking(
+      String registrationNumber, String parkingSpaceId) async {
+    var response = await http.post(
+      Uri.parse(baseUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'vehicleRegistration': registrationNumber,
+        'parkingSpaceId': parkingSpaceId,
+        'startTime': DateTime.now().toIso8601String(),
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print("Parking added successfully!");
+    } else {
+      print("Error adding parking: ${response.body}");
+    }
   }
 
-  List<Parking> getAll() => parkings;
+  // Get all parking records (GET request)
+  Future<void> getAllParkings() async {
+    var response = await http.get(Uri.parse(baseUrl));
 
-  Parking? getById(int id) {
-    return parkings.isNotEmpty && id >= 0 && id < parkings.length
-        ? parkings[id]
-        : null;
+    if (response.statusCode == 200) {
+      print("Parkings: ${response.body}");
+    } else {
+      print("Error fetching parkings: ${response.statusCode}");
+    }
   }
 
-  void delete(int id) {
-    parkings.removeAt(id);
-    print("Parking deleted.");
+  // Get parking by ID (GET request)
+  Future<void> getById(String id) async {
+    var response = await http.get(Uri.parse('$baseUrl/$id'));
+
+    if (response.statusCode == 200) {
+      print("Parking found: ${response.body}");
+    } else {
+      print("Parking not found.");
+    }
+  }
+
+  // Delete a parking record (DELETE request)
+  Future<void> deleteParking(String id) async {
+    var response = await http.delete(Uri.parse('$baseUrl/$id'));
+
+    if (response.statusCode == 200) {
+      print("Parking deleted successfully!");
+    } else {
+      print("Error deleting parking: ${response.body}");
+    }
   }
 }
